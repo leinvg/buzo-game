@@ -13,6 +13,6 @@ export const ENVIRONMENT = {
 // Oxígeno
 export const OXYGEN = {
   max: 10,
-  start: 6,
+  start: 5,
   decreaseIntervalMs: 1000,
 };

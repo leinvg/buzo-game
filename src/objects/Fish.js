@@ -1,36 +1,35 @@
 // /src/objects/Fish.js
 import Phaser from "phaser";
 
-// Constantes locales
-const FISH_SIZE = { width: 40, height: 20 };
-const FISH_COLOR = 0xff0000;
-const FISH_NET_COLOR = 0x87ceeb;
-const FISH_NET_BORDER = 0x001100;
 const FISH_SPEED = 80;
 const RELEASE_MULTIPLIER = 3;
 
-export default class Fish extends Phaser.GameObjects.Rectangle {
+export default class Fish extends Phaser.Physics.Arcade.Sprite {
   constructor(scene, x, y, speed = FISH_SPEED) {
-    super(scene, x, y, FISH_SIZE.width, FISH_SIZE.height, FISH_COLOR);
+    super(scene, x, y, "fish");
 
     this.scene = scene;
     scene.add.existing(this);
     scene.physics.add.existing(this);
+    this.setScale(0.5);
 
     this.trapped = true;
     this.speed = speed;
     this.direction = Phaser.Math.Between(0, 1) === 0 ? -1 : 1;
 
-    // Red de captura
-    this.net = scene.add.rectangle(
-      x,
-      y,
-      FISH_SIZE.width + 8,
-      FISH_SIZE.height + 8,
-      FISH_NET_COLOR,
-      0.5
-    );
-    this.net.setStrokeStyle(2, FISH_NET_BORDER);
+    // Red (con imagen transparente)
+    this.net = scene.add.image(x, y, "bag");
+    this.net.setOrigin(0.5, 0.7);
+    this.net.setAlpha(0.6);
+    this.net.setScale(0.2);
+
+    // Aseguramos orden de render
+    this.setDepth(0);
+    this.net.setDepth(1);
+
+    // Ajustamos flip inicial según dirección
+    this.flipX = this.direction === -1;
+    this.net.flipX = this.direction === -1;
   }
 
   free() {
@@ -63,6 +62,12 @@ export default class Fish extends Phaser.GameObjects.Rectangle {
         }
         this.destroy();
       }
+    }
+
+    // Controlamos el giro de la textura y la red
+    this.flipX = this.direction === -1;
+    if (this.net) {
+      this.net.flipX = this.direction === -1;
     }
   }
 

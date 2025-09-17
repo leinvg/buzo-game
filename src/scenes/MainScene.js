@@ -6,6 +6,8 @@ import boatImg from "../assets/boat.png";
 import diverImg from "../assets/diver.png";
 import seaImg from "../assets/sea.png";
 import skyImg from "../assets/sky.png";
+import fishImg from "../assets/fish.png";
+import bagImg from "../assets/bag.png";
 
 import Fish from "../objects/Fish.js";
 import HUD from "../objects/HUD.js";
@@ -23,6 +25,8 @@ export default class MainScene extends Phaser.Scene {
     this.load.image("diver", diverImg);
     this.load.image("sea", seaImg);
     this.load.image("sky", skyImg);
+    this.load.image("fish", fishImg);
+    this.load.image("bag", bagImg);
   }
 
   create() {
@@ -30,17 +34,17 @@ export default class MainScene extends Phaser.Scene {
 
     this.seaLevel = GAME_HEIGHT / 3;
 
-    // background: cielo → usamos imagen
+    // background: cielo
     const skyBg = this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 6, "sky");
     skyBg.setDisplaySize(GAME_WIDTH, GAME_HEIGHT / 3);
     skyBg.setDepth(-6);
 
-    // background: mar → usamos imagen
+    // background: mar
     const seaBg = this.add.image(GAME_WIDTH / 2, (2 * GAME_HEIGHT) / 3, "sea");
     seaBg.setDisplaySize(GAME_WIDTH, (2 * GAME_HEIGHT) / 3);
     seaBg.setDepth(-5);
 
-    // Línea blanca para marcar el nivel del mar
+    // Línea blanca
     this.add
       .rectangle(GAME_WIDTH / 2, this.seaLevel, GAME_WIDTH, 1, 0xffffff, 0.5)
       .setDepth(-4);
@@ -58,7 +62,7 @@ export default class MainScene extends Phaser.Scene {
     this.fishes = this.add.group();
     for (let i = 0; i < 8; i++) {
       const x = Phaser.Math.Between(200, GAME_WIDTH - 40);
-      const y = Phaser.Math.Between(this.seaLevel + 40, GAME_HEIGHT - 60);
+      const y = Phaser.Math.Between(this.seaLevel + 100, GAME_HEIGHT - 60);
       this.fishes.add(new Fish(this, x, y));
     }
 
@@ -68,7 +72,6 @@ export default class MainScene extends Phaser.Scene {
         fish.free();
         this.hud.updateScore(this.hud.score + 1);
 
-        // Aumentar oxígeno del diver y reflejar en HUD
         diver.oxygen = Math.min(diver.oxygen + 1, OXYGEN.max);
         this.hud.setOxygen(diver.oxygen);
       }
@@ -77,7 +80,6 @@ export default class MainScene extends Phaser.Scene {
     // collisions diver - boat
     this.physics.add.overlap(this.diver, this.boat, () => {
       if (this.hud.oxygen > 0) {
-        // Ganó → volver al menú con status "win"
         this.scene.start("MenuScene", {
           status: "win",
           score: this.hud.score,
@@ -90,16 +92,12 @@ export default class MainScene extends Phaser.Scene {
     const secondsElapsed = Math.floor(time / 1000);
     this.hud.updateTime(secondsElapsed);
 
-    // diver
     this.diver.update(delta, this.seaLevel, this.hud);
 
-    // HUD
     this.hud.update(delta);
 
-    // fishes
     this.fishes.getChildren().forEach((f) => f.update(delta, GAME_WIDTH));
 
-    // Revisar condición de derrota por oxígeno
     if (this.hud.oxygen <= 0) {
       this.scene.start("MenuScene", {
         status: "lose",
