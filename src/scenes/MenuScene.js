@@ -9,8 +9,9 @@ export default class MenuScene extends Phaser.Scene {
   }
 
   init(data) {
-    // Saber si llegamos por game over y cuántos peces se rescataron
+    // Saber si llegamos por game over o victoria y cuántos peces se rescataron
     this.gameOver = data.gameOver || false;
+    this.victory = data.victory || false;
     this.score = data.score || 0;
   }
 
@@ -27,14 +28,23 @@ export default class MenuScene extends Phaser.Scene {
 
     let startY = GAME_HEIGHT / 2 - 40;
 
-    // Mensaje Game Over (solo si aplica)
+    // Mensaje según el estado
     if (this.gameOver) {
       this.add
         .text(
           GAME_WIDTH / 2,
           startY - 60,
           `¡Perdiste! Rescataste ${this.score} peces`,
-          { fontSize: "28px", color: "#fff" }
+          { fontSize: "28px", color: "#ff5555" }
+        )
+        .setOrigin(0.5);
+    } else if (this.victory) {
+      this.add
+        .text(
+          GAME_WIDTH / 2,
+          startY - 60,
+          `¡Victoria! Rescataste ${this.score} peces`,
+          { fontSize: "28px", color: "#00ff55" }
         )
         .setOrigin(0.5);
     }
