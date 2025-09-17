@@ -1,13 +1,11 @@
 // /src/scenes/MainScene.js
 
 import Phaser from "phaser";
-import {
-  GAME_WIDTH,
-  GAME_HEIGHT,
-  ENVIRONMENT,
-  FISH,
-  OXYGEN,
-} from "../config/constants.js";
+import { GAME_WIDTH, GAME_HEIGHT, OXYGEN } from "../config/constants.js";
+import boatImg from "../assets/boat.png";
+import diverImg from "../assets/diver.png";
+import seaImg from "../assets/sea.png";
+import skyImg from "../assets/sky.png";
 
 import Fish from "../objects/Fish.js";
 import HUD from "../objects/HUD.js";
@@ -19,50 +17,49 @@ export default class MainScene extends Phaser.Scene {
     super({ key: "MainScene" });
   }
 
+  preload() {
+    // Cargamos texturas desde assets
+    this.load.image("boat", boatImg);
+    this.load.image("diver", diverImg);
+    this.load.image("sea", seaImg);
+    this.load.image("sky", skyImg);
+  }
+
   create() {
     console.log("MainScene.create() ejecutado");
 
     this.seaLevel = GAME_HEIGHT / 3;
 
-    // background
-    this.add.rectangle(
-      GAME_WIDTH / 2,
-      GAME_HEIGHT / 6,
-      GAME_WIDTH,
-      GAME_HEIGHT / 3,
-      ENVIRONMENT.skyColor
-    );
-    this.add.rectangle(
-      GAME_WIDTH / 2,
-      (2 * GAME_HEIGHT) / 3,
-      GAME_WIDTH,
-      (2 * GAME_HEIGHT) / 3,
-      ENVIRONMENT.seaColor
-    );
-    this.add.rectangle(
-      GAME_WIDTH / 2,
-      this.seaLevel,
-      GAME_WIDTH,
-      1,
-      0xffffff,
-      0.5
-    );
+    // background: cielo → usamos imagen
+    const skyBg = this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 6, "sky");
+    skyBg.setDisplaySize(GAME_WIDTH, GAME_HEIGHT / 3);
+    skyBg.setDepth(-6);
+
+    // background: mar → usamos imagen
+    const seaBg = this.add.image(GAME_WIDTH / 2, (2 * GAME_HEIGHT) / 3, "sea");
+    seaBg.setDisplaySize(GAME_WIDTH, (2 * GAME_HEIGHT) / 3);
+    seaBg.setDepth(-5);
+
+    // Línea blanca para marcar el nivel del mar
+    this.add
+      .rectangle(GAME_WIDTH / 2, this.seaLevel, GAME_WIDTH, 1, 0xffffff, 0.5)
+      .setDepth(-4);
 
     // boat
-    this.boat = new Boat(this, GAME_WIDTH / 8, this.seaLevel);
+    this.boat = new Boat(this, 120, this.seaLevel - 15);
 
     // HUD
     this.hud = new HUD(this);
 
     // diver
-    this.diver = new Diver(this, 100, 280);
+    this.diver = new Diver(this, 100, 380);
 
     // fishes
     this.fishes = this.add.group();
-    for (let i = 0; i < FISH.count; i++) {
+    for (let i = 0; i < 8; i++) {
       const x = Phaser.Math.Between(200, GAME_WIDTH - 40);
       const y = Phaser.Math.Between(this.seaLevel + 40, GAME_HEIGHT - 60);
-      this.fishes.add(new Fish(this, x, y, FISH.speed));
+      this.fishes.add(new Fish(this, x, y));
     }
 
     // collisions diver - fish
@@ -80,13 +77,11 @@ export default class MainScene extends Phaser.Scene {
     // collisions diver - boat
     this.physics.add.overlap(this.diver, this.boat, () => {
       if (this.hud.oxygen > 0) {
-        this.scene.pause();
-        this.add.text(
-          GAME_WIDTH / 2 - 220,
-          GAME_HEIGHT / 2,
-          `¡Victoria! Rescataste ${this.hud.score} peces y llegaste al bote.`,
-          { fontSize: "24px", color: "#000", wordWrap: { width: 440 } }
-        );
+        // Ganó → volver al menú con status "win"
+        this.scene.start("MenuScene", {
+          status: "win",
+          score: this.hud.score,
+        });
       }
     });
   }
@@ -103,5 +98,13 @@ export default class MainScene extends Phaser.Scene {
 
     // fishes
     this.fishes.getChildren().forEach((f) => f.update(delta, GAME_WIDTH));
+
+    // Revisar condición de derrota por oxígeno
+    if (this.hud.oxygen <= 0) {
+      this.scene.start("MenuScene", {
+        status: "lose",
+        score: this.hud.score,
+      });
+    }
   }
 }

@@ -9,9 +9,8 @@ export default class MenuScene extends Phaser.Scene {
   }
 
   init(data) {
-    // Saber si llegamos por game over o victoria y cuántos peces se rescataron
-    this.gameOver = data.gameOver || false;
-    this.victory = data.victory || false;
+    // status puede ser "win" o "lose"
+    this.status = data.status || null;
     this.score = data.score || 0;
   }
 
@@ -29,7 +28,7 @@ export default class MenuScene extends Phaser.Scene {
     let startY = GAME_HEIGHT / 2 - 40;
 
     // Mensaje según el estado
-    if (this.gameOver) {
+    if (this.status === "lose") {
       this.add
         .text(
           GAME_WIDTH / 2,
@@ -38,7 +37,7 @@ export default class MenuScene extends Phaser.Scene {
           { fontSize: "28px", color: "#ff5555" }
         )
         .setOrigin(0.5);
-    } else if (this.victory) {
+    } else if (this.status === "win") {
       this.add
         .text(
           GAME_WIDTH / 2,

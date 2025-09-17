@@ -10,7 +10,7 @@ const HUD_POSITIONS = {
   oxygenLabel: { x: 20, y: 50 },
   bar: { x: 130, y: 54, width: 200, height: 12 },
 };
-const BAR_SAFE_COLOR = 0x00a2ff; // azul
+const BAR_SAFE_COLOR = 0x03ff5f; // azul
 const BAR_CRITICAL_COLOR = 0xff8c00; // naranja
 
 export default class HUD {

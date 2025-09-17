@@ -1,11 +1,17 @@
 // /src/objects/Fish.js
+import Phaser from "phaser";
 
-import Phaser from 'phaser';
-import { FISH } from '../config/constants.js';
+// Constantes locales
+const FISH_SIZE = { width: 40, height: 20 };
+const FISH_COLOR = 0xff0000;
+const FISH_NET_COLOR = 0x87ceeb;
+const FISH_NET_BORDER = 0x001100;
+const FISH_SPEED = 80;
+const RELEASE_MULTIPLIER = 3;
 
 export default class Fish extends Phaser.GameObjects.Rectangle {
-  constructor(scene, x, y, speed = FISH.speed) {
-    super(scene, x, y, FISH.size.width, FISH.size.height, FISH.color);
+  constructor(scene, x, y, speed = FISH_SPEED) {
+    super(scene, x, y, FISH_SIZE.width, FISH_SIZE.height, FISH_COLOR);
 
     this.scene = scene;
     scene.add.existing(this);
@@ -19,12 +25,12 @@ export default class Fish extends Phaser.GameObjects.Rectangle {
     this.net = scene.add.rectangle(
       x,
       y,
-      FISH.size.width + 8,
-      FISH.size.height + 8,
-      FISH.netColor,
+      FISH_SIZE.width + 8,
+      FISH_SIZE.height + 8,
+      FISH_NET_COLOR,
       0.5
     );
-    this.net.setStrokeStyle(2, FISH.netBorder);
+    this.net.setStrokeStyle(2, FISH_NET_BORDER);
   }
 
   free() {
@@ -33,11 +39,11 @@ export default class Fish extends Phaser.GameObjects.Rectangle {
       this.net.destroy();
       this.net = null;
     }
-    this.speed *= FISH.releaseMultiplier;
+    this.speed *= RELEASE_MULTIPLIER;
   }
 
   update(delta, worldWidth) {
-    this.x += this.direction * this.speed * delta / 1000;
+    this.x += (this.direction * this.speed * delta) / 1000;
 
     if (this.trapped) {
       const halfW = this.width / 2;

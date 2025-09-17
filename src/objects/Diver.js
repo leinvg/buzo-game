@@ -1,12 +1,9 @@
 // /src/objects/Diver.js
 
 import Phaser from "phaser";
-import { OXYGEN, GAME_HEIGHT } from "../config/constants.js";
+import { OXYGEN } from "../config/constants.js";
 
-// Constantes locales del buzo
-const DIVER_WIDTH = 32;
-const DIVER_HEIGHT = 64;
-const DIVER_COLOR = 0xffd166;
+// Velocidades y físicas del buzo
 const DIVER_SPEED = {
   swimX: 220,
   swimUp: -120,
@@ -15,20 +12,22 @@ const DIVER_SPEED = {
   gravityStep: 5,
 };
 
-export default class Diver extends Phaser.GameObjects.Rectangle {
+export default class Diver extends Phaser.Physics.Arcade.Sprite {
   constructor(scene, x, y) {
-    super(scene, x, y, DIVER_WIDTH, DIVER_HEIGHT, DIVER_COLOR);
+    super(scene, x, y, "diver"); // clave de la imagen cargada en MainScene
 
     this.scene = scene;
+
+    // Agregar a la escena y habilitar físicas
     scene.add.existing(this);
     scene.physics.add.existing(this);
 
-    this.body.setCollideWorldBounds(true);
+    this.setCollideWorldBounds(true);
 
-    // Oxígeno
+    // Oxígeno inicial
     this.oxygen = OXYGEN.start;
 
-    // Controles
+    // Controles de teclado
     this.cursors = scene.input.keyboard.createCursorKeys();
 
     // Velocidades
@@ -38,35 +37,44 @@ export default class Diver extends Phaser.GameObjects.Rectangle {
   update(delta, seaLevel, hud) {
     const { swimX, swimUp, swimDown, maxFall, gravityStep } = this.speed;
 
+    // Reset horizontal
+    this.setVelocityX(0);
+
     // Movimiento lateral
-    this.body.setVelocityX(0);
-    if (this.cursors.left.isDown) this.body.setVelocityX(-swimX);
-    if (this.cursors.right.isDown) this.body.setVelocityX(swimX);
-
-    // Movimiento vertical
-    if (this.cursors.up.isDown) this.body.setVelocityY(swimUp);
-    else if (this.cursors.down.isDown) this.body.setVelocityY(swimDown);
-    else if (this.body.velocity.y < maxFall)
-      this.body.setVelocityY(this.body.velocity.y + gravityStep);
-
-    // Evitar que suba por encima del mar
-    if (this.y < seaLevel) {
-      this.y = seaLevel;
-      this.body.setVelocityY(0);
+    if (this.cursors.left.isDown) {
+      this.setVelocityX(-swimX);
+      this.setFlipX(true); // Voltear sprite al ir a la izquierda
+    } else if (this.cursors.right.isDown) {
+      this.setVelocityX(swimX);
+      this.setFlipX(false);
     }
 
-    // Consumo continuo de oxígeno (barra progresiva)
+    // Movimiento vertical
+    if (this.cursors.up.isDown) {
+      this.setVelocityY(swimUp);
+    } else if (this.cursors.down.isDown) {
+      this.setVelocityY(swimDown);
+    } else if (this.body.velocity.y < maxFall) {
+      this.setVelocityY(this.body.velocity.y + gravityStep);
+    }
+
+    // Limite del mar (no puede salir por arriba)
+    if (this.y < seaLevel) {
+      this.y = seaLevel;
+      this.setVelocityY(0);
+    }
+
+    // Oxígeno: pierde cuando está bajo el agua
     const diverTop = this.y - this.height / 2;
     if (diverTop > seaLevel) {
-      const oxygenLossPerSecond = 1; // Oxígeno perdido por segundo
+      const oxygenLossPerSecond = 1;
       this.oxygen -= oxygenLossPerSecond * (delta / 1000);
       this.oxygen = Math.max(this.oxygen, 0);
 
       hud.setOxygen(this.oxygen);
 
-      // Si se queda sin oxígeno, pausa la escena y activa mensaje de Game Over
       if (this.oxygen <= 0) {
-        this.fillColor = 0x0000ff;
+        // Game Over
         this.scene.scene.pause();
         this.scene.scene.start("MenuScene", {
           gameOver: true,
@@ -76,7 +84,7 @@ export default class Diver extends Phaser.GameObjects.Rectangle {
     }
   }
 
-  // Incrementa oxígeno al liberar peces
+  // Recuperar oxígeno al rescatar peces
   addOxygen(amount, hud) {
     this.oxygen = Math.min(this.oxygen + amount, OXYGEN.max);
     hud.setOxygen(this.oxygen);
